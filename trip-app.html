@@ -422,17 +422,27 @@ function renderH() {
   const {done, total} = prog(day);
   const pct = total ? Math.round(done/total*100) : 0;
   const nextDay = DAYS[idx+1] || null;
+  const prevDay = DAYS[idx-1] || null;
 
   document.getElementById('hdr-meta').textContent = `Tag ${idx+1} / 15`;
 
-  const backBtn = !isToday ? `
-    <button class="back-btn" onclick="selDay=null;renderH()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-      Heute anzeigen
-    </button>` : '';
+  const navRow = `
+    <div style="display:flex;align-items:center;gap:.5rem;padding:.3rem 0 .6rem">
+      ${prevDay ? `<button class="back-btn" style="margin:0" onclick="openDay('${prevDay.id}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        ${shortDate(prevDay.date)}
+      </button>` : `<div style="flex:1"></div>`}
+      <div style="flex:1;text-align:center">
+        ${!isToday ? `<button class="back-btn" style="margin:0;justify-content:center" onclick="selDay=null;renderH()">Heute</button>` : ''}
+      </div>
+      ${nextDay ? `<button class="back-btn" style="margin:0;flex-direction:row-reverse" onclick="openDay('${nextDay.id}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        ${shortDate(nextDay.date)}
+      </button>` : `<div style="flex:1"></div>`}
+    </div>`;
 
   panel.innerHTML = `
-    ${backBtn}
+    ${navRow}
     <div class="card" style="${isToday?'box-shadow:0 0 0 2px '+c.color:''}">
       <div class="today-band" style="background:${c.color}"></div>
       <div class="today-meta">
@@ -456,12 +466,7 @@ function renderH() {
         <span class="plabel">${done} / ${total} erledigt</span>
       </div>
     </div>
-    ${nextDay ? `
-    <button class="tmw" onclick="openDay('${nextDay.id}')" style="width:100%;text-align:left;background:var(--surf);border:1px solid var(--bdr);border-radius:12px;cursor:pointer;font-family:inherit;padding:.85rem;margin-top:0">
-      <div class="tmw-lbl">↓ Morgen · ${shortDate(nextDay.date)}</div>
-      <div class="tmw-title" style="color:${C[nextDay.city].color}">${nextDay.title}</div>
-      <div class="tmw-city">${C[nextDay.city].name}</div>
-    </button>` : ''}`;
+    `;
 }
 
 // ── Render: Tage ────────────────────────────────────────────────────
