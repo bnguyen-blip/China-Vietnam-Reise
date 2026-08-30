@@ -208,6 +208,27 @@ body{
   background:none;border:none;cursor:pointer;padding:.4rem 0 .6rem;
 }
 .back-btn svg{width:16px;height:16px}
+/* ── Day nav buttons ─────────────────── */
+.day-nav-btn{
+  display:flex;align-items:center;gap:.4rem;
+  min-height:44px;padding:.5rem .85rem;
+  background:var(--surf);border:1.5px solid var(--bdr);
+  border-radius:50px;cursor:pointer;
+  font-family:inherit;font-size:.8rem;font-weight:600;color:var(--ink);
+  transition:background .15s,transform .1s,box-shadow .15s;
+  white-space:nowrap;flex-shrink:0;
+  box-shadow:0 1px 3px rgba(0,0,0,.07);
+}
+.day-nav-btn:active{background:var(--bdr);transform:scale(.96);box-shadow:none}
+.day-nav-btn svg{width:18px;height:18px;flex-shrink:0;stroke:var(--muted)}
+.day-nav-today{
+  min-height:44px;padding:.5rem 1.1rem;
+  background:var(--ink);border:none;border-radius:50px;
+  font-family:inherit;font-size:.8rem;font-weight:700;color:var(--base);
+  cursor:pointer;transition:opacity .15s,transform .1s;
+  box-shadow:0 1px 4px rgba(0,0,0,.18);
+}
+.day-nav-today:active{opacity:.8;transform:scale(.96)}
 /* ── Toast ──────────────────────────── */
 #toast{
   position:fixed;bottom:calc(var(--nav-h) + var(--safe-b) + .75rem);
@@ -427,18 +448,18 @@ function renderH() {
   document.getElementById('hdr-meta').textContent = `Tag ${idx+1} / 15`;
 
   const navRow = `
-    <div style="display:flex;align-items:center;gap:.5rem;padding:.3rem 0 .6rem">
-      ${prevDay ? `<button class="back-btn" style="margin:0" onclick="openDay('${prevDay.id}')">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.5rem 0 .8rem">
+      ${prevDay ? `<button class="day-nav-btn" onclick="openDay('${prevDay.id}')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         ${shortDate(prevDay.date)}
-      </button>` : `<div style="flex:1"></div>`}
-      <div style="flex:1;text-align:center">
-        ${!isToday ? `<button class="back-btn" style="margin:0;justify-content:center" onclick="selDay=null;renderH()">Heute</button>` : ''}
+      </button>` : `<div></div>`}
+      <div style="display:flex;justify-content:center">
+        ${!isToday ? `<button class="day-nav-today" onclick="selDay=null;renderH()">Heute</button>` : ''}
       </div>
-      ${nextDay ? `<button class="back-btn" style="margin:0;flex-direction:row-reverse" onclick="openDay('${nextDay.id}')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      ${nextDay ? `<button class="day-nav-btn" onclick="openDay('${nextDay.id}')">
         ${shortDate(nextDay.date)}
-      </button>` : `<div style="flex:1"></div>`}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>` : `<div></div>`}
     </div>`;
 
   panel.innerHTML = `
