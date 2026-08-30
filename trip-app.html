@@ -357,8 +357,8 @@ function renderH() {
   const panel = document.getElementById('tab-h');
   const t = tod();
 
-  // Pre-trip countdown
-  if (t < TSTART) {
+  // Pre-trip countdown (only if no day selected)
+  if (t < TSTART && !selDay) {
     const diff = Math.round((TSTART - t) / 86400000);
     document.getElementById('hdr-meta').textContent = '';
     panel.innerHTML = `
@@ -391,8 +391,8 @@ function renderH() {
     return;
   }
 
-  // Post-trip
-  if (t > TEND) {
+  // Post-trip (only if no day selected)
+  if (t > TEND && !selDay) {
     const total = DAYS.reduce((a,d)=>a+d.items.length,0);
     const done = DAYS.reduce((a,d)=>a+d.items.filter(i=>S.checked[i.id]).length,0);
     document.getElementById('hdr-meta').textContent = '';
