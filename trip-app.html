@@ -220,6 +220,13 @@ body{
 #toast.on{opacity:1}
 /* ── Done / Countdown cities ────────── */
 .route-cities{display:flex;flex-direction:column;gap:.4rem;margin-top:.5rem}
+.rci-btn{
+  display:flex;align-items:center;gap:.75rem;width:100%;
+  background:var(--surf);border:1px solid var(--bdr);border-radius:12px;
+  padding:.55rem .75rem;cursor:pointer;transition:background .15s,transform .1s;
+  font-family:inherit;
+}
+.rci-btn:active{background:var(--cd,#EDF4FA);transform:scale(.98)}
 .rci{
   display:flex;align-items:center;gap:.6rem;
   padding:.5rem .65rem;
@@ -280,12 +287,12 @@ const DAYS = [
    items:[{id:'d03a',t:'09:30',l:'People Square'},{id:'d03b',t:'11:00',l:'Nanjing Lu Fußgängerzone'},{id:'d03c',t:'14:00',l:'Jade Buddha Tempel'},{id:'d03d',t:'19:00',l:'Huang Yuming BBQ 🍖'}]},
   {id:'d04',date:'2026-09-28',city:'sh',num:4,title:'Yuyuan Garten & Bund bei Nacht',
    items:[{id:'d04a',t:'09:00',l:'Yuyuan Garten & Altstadt'},{id:'d04b',t:'12:00',l:'Xiaolongbao Mittagessen'},{id:'d04c',t:'15:00',l:'Pudong & Skyline-Foto'},{id:'d04d',t:'19:30',l:'The Bund bei Nacht ✨'}]},
-  {id:'d05',date:'2026-09-29',city:'ck',num:1,title:'Abflug & Ankunft Chongqing',
-   items:[{id:'d05a',t:'Morgen',l:'Check-out Shanghai'},{id:'d05b',t:'Mittag',l:'Flug PVG → CKG ✈️'},{id:'d05c',t:'15:00',l:'Hotel Check-in Chongqing'},{id:'d05d',t:'17:00',l:'Ciqikou Altstadtviertel'},{id:'d05e',t:'19:00',l:'Erstes Chongqing Hot Pot 🌶️'}]},
-  {id:'d06',date:'2026-09-30',city:'ck',num:2,title:'Jiefangbei & Hongya Cave',
-   items:[{id:'d06a',t:'09:30',l:'Jiefangbei Platz'},{id:'d06b',t:'11:30',l:'Spicy Noodles Mittagessen'},{id:'d06c',t:'14:00',l:'Stillflussgegend erkunden'},{id:'d06d',t:'18:30',l:'Hongya Cave beleuchtet 🏮'}]},
-  {id:'d07',date:'2026-10-01',city:'ck',num:3,title:'Nationalfeiertag 🇨🇳 Golden Week',
-   items:[{id:'d07a',t:'09:00',l:'Eling Park & Flussblick'},{id:'d07b',t:'12:00',l:'Nationalfeiertag-Stimmung'},{id:'d07c',t:'15:00',l:'Liziba Metro (fährt durchs Haus!)'},{id:'d07d',t:'21:00',l:'Feuerwerk über den Flüssen 🎆'}]},
+  {id:'d05',date:'2026-09-29',city:'ck',num:1,title:'Ankunft + Jiefangbei',
+   items:[{id:'d05a',t:'Morgen',l:'Check-out Shanghai'},{id:'d05b',t:'Mittag',l:'Flug PVG → CKG ✈️'},{id:'d05c',t:'15:00',l:'Hotel Check-in Chongqing'},{id:'d05d',t:'17:00',l:'Luohan Temple — Buddhistische Oase'},{id:'d05e',t:'19:00',l:'Jiefangbei Pedestrian Street 🏮'},{id:'d05f',t:'21:00',l:'Raffles Sky Bridge — Nacht-Panorama 250m'}]},
+  {id:'d06',date:'2026-09-30',city:'ck',num:2,title:'Hongyadong & Yangtze',
+   items:[{id:'d06a',t:'08:30',l:'Liziba Station — Monorail durchs Gebäude 🚝'},{id:'d06b',t:'10:00',l:'Xiahaoli Old Street — Gassen am Kliff'},{id:'d06c',t:'12:30',l:'Mittagessen am Fluss'},{id:'d06d',t:'14:30',l:'Yangtze Seilbahn — Flussüberquerung'},{id:'d06e',t:'16:00',l:'Nanbin Road — Süduferpanorama'},{id:'d06f',t:'19:00',l:'Hongyadong (Hongya Cave) bei Nacht 🏮'},{id:'d06g',t:'21:00',l:'Huang Yuming BBQ 🔥'}]},
+  {id:'d07',date:'2026-10-01',city:'ck',num:3,title:'Nationalfeiertag 🇨🇳 + Xi Yue He Zi',
+   items:[{id:'d07a',t:'08:00',l:'Wadingding Cafe — Glasböden & Stadtpanorama ☕'},{id:'d07b',t:'10:30',l:'Xi Yue He Zi — Trendviertel erkunden'},{id:'d07c',t:'13:00',l:'Mittagessen (früh, vor den Massen!)'},{id:'d07d',t:'15:00',l:'⚠️ Nationalfeiertag — Golden Week, sehr voll!'},{id:'d07e',t:'20:00',l:'Abendspaziergang Jiefangbei Beleuchtung'}]},
   {id:'d08',date:'2026-10-02',city:'hcm',num:1,title:'Abflug & Ankunft Saigon',
    items:[{id:'d08a',t:'Morgen',l:'Letzter Morgen Chongqing'},{id:'d08b',t:'14:30',l:'Transfer Flughafen CKG'},{id:'d08c',t:'18:40',l:'Abflug CA407 → Saigon ✈️'},{id:'d08d',t:'21:20',l:'Ankunft SGN · Hotel Check-in'}]},
   {id:'d09',date:'2026-10-03',city:'hcm',num:2,title:'Historisches Saigon & Landmark 81',
@@ -365,16 +372,18 @@ function renderH() {
       </div>
       <div class="slabel">Reiseroute</div>
       <div class="route-cities">
-        ${Object.entries(C).map(([id,c])=>`
-          <div class="rci">
-            <div style="width:3px;height:36px;border-radius:2px;background:${c.color};flex-shrink:0"></div>
+        ${Object.entries(C).map(([id,c])=>{
+          const firstDay = DAYS.find(d=>d.city===id);
+          return `
+          <button class="rci-btn" onclick="openDay('${firstDay?firstDay.id:''}')" style="--cc:${c.color};--cd:${c.dim}">
+            <div style="width:3px;min-height:44px;border-radius:2px;background:${c.color};flex-shrink:0"></div>
             <span style="font-size:1.3rem">${c.flag}</span>
-            <div>
+            <div style="flex:1;text-align:left">
               <div style="font-weight:700;font-size:.88rem">${c.name}</div>
               <div style="font-size:.7rem;color:var(--muted)">${c.sub}</div>
             </div>
-          </div>
-        `).join('')}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${c.color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>`}).join('')}
       </div>
       <div style="text-align:center;padding:.85rem 0;font-size:.72rem;color:var(--muted)">
         5 Erwachsene · 3 Kinder (10–14) · 15 Reisetage
@@ -560,6 +569,7 @@ function go(tab) {
 }
 
 function openDay(dayId) {
+  if (!dayId) return;
   selDay = dayId;
   renderH();
   go('h');
