@@ -121,12 +121,20 @@ body{
 .pfill{height:100%;border-radius:2px;transition:width .3s}
 .plabel{font-size:.7rem;color:var(--muted);white-space:nowrap}
 /* ── Countdown ──────────────────────── */
-.cdown{text-align:center;padding:2.5rem 1rem}
-.cdown-n{
-  font-family:'Fraunces',serif;font-size:5rem;font-weight:700;line-height:1;
-}
-.cdown-u{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:.2rem}
+.cdown{text-align:center;padding:2rem 1rem}
 .cdown-d{font-size:.95rem;font-weight:600;margin-top:.85rem}
+/* live timer row */
+.cdown-row{display:flex;align-items:flex-end;justify-content:center;gap:.3rem;margin:.5rem 0 .2rem}
+.cdown-unit{display:flex;flex-direction:column;align-items:center;min-width:2.6ch}
+.cdown-val{
+  font-family:'Fraunces',serif;font-size:3.6rem;font-weight:700;color:var(--sh);
+  line-height:1;text-align:center;font-variant-numeric:tabular-nums;
+}
+.cdown-lbl{font-size:.58rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-top:.2rem}
+.cdown-sep{
+  font-family:'Fraunces',serif;font-size:3rem;font-weight:300;color:var(--bdr);
+  line-height:1;padding-bottom:.55rem;
+}
 /* ── Tage ───────────────────────────── */
 .city-sep{
   display:flex;align-items:center;gap:.5rem;
@@ -361,6 +369,7 @@ if (!S.docs) S.docs = {};
 let artCap = null;
 let dlCap  = null;
 let selDay = null; // null = auto today
+let countdownTimer = null;
 
 // ── Data ─────────────────────────────────────────────────────────────
 const C = {
@@ -418,6 +427,32 @@ const FLIGHTS = [
   {from:'HAN Hanoi',        to:'ZRH Zürich',        date:'9. Okt', time:'Abflug 20:45',  fn:''}
 ];
 
+// ── Countdown timer ──────────────────────────────────────────────────
+const DEPARTURE = new Date(2026, 8, 25, 14, 0, 0); // 25. Sep 2026, 14:00 Uhr
+
+function timerHTML(ms) {
+  if (ms <= 0) return '<span class="cdown-val" style="font-size:2rem">Los geht\'s! 🛫</span>';
+  const p   = n => String(n).padStart(2,'0');
+  const d   = Math.floor(ms / 86400000);
+  const h   = Math.floor((ms % 86400000) / 3600000);
+  const m   = Math.floor((ms % 3600000)  / 60000);
+  const s   = Math.floor((ms % 60000)    / 1000);
+  const unit = (val, lbl) => `<div class="cdown-unit"><span class="cdown-val">${val}</span><span class="cdown-lbl">${lbl}</span></div>`;
+  const sep  = `<span class="cdown-sep">:</span>`;
+  return unit(d,'Tage') + sep + unit(p(h),'Std') + sep + unit(p(m),'Min') + sep + unit(p(s),'Sek');
+}
+
+function startCountdown() {
+  clearInterval(countdownTimer);
+  const tick = () => {
+    const el = document.getElementById('cdown-timer');
+    if (!el) { clearInterval(countdownTimer); return; }
+    el.innerHTML = timerHTML(DEPARTURE - new Date());
+  };
+  tick();
+  countdownTimer = setInterval(tick, 1000);
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────
 const ld = s => { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); };
 const tod = () => { const n=new Date(); return new Date(n.getFullYear(),n.getMonth(),n.getDate()); };
@@ -451,14 +486,12 @@ function renderH() {
 
   // Pre-trip countdown (only if no day selected)
   if (t < TSTART && !selDay) {
-    const diff = Math.round((TSTART - t) / 86400000);
     document.getElementById('hdr-meta').textContent = '';
     panel.innerHTML = `
       <div class="card">
         <div class="cdown">
-          <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem">Abflug in</div>
-          <div class="cdown-n" style="color:var(--sh)">${diff}</div>
-          <div class="cdown-u">Tage${diff===1?'':'n'}</div>
+          <div style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem">Abflug in</div>
+          <div class="cdown-row" id="cdown-timer"></div>
           <div class="cdown-d">25. September 2026</div>
         </div>
       </div>
@@ -480,6 +513,7 @@ function renderH() {
       <div style="text-align:center;padding:.85rem 0;font-size:.72rem;color:var(--muted)">
         5 Erwachsene · 3 Kinder (10–14) · 15 Reisetage
       </div>`;
+    startCountdown();
     return;
   }
 
@@ -805,6 +839,7 @@ function renderU() {
 
 // ── Navigation ───────────────────────────────────────────────────────
 function go(tab) {
+  if (tab !== 'h') { clearInterval(countdownTimer); countdownTimer = null; }
   document.querySelectorAll('.tab').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
   document.getElementById('tab-'+tab).classList.add('on');
