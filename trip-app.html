@@ -247,13 +247,30 @@ body{
   border-bottom:2px solid var(--bdr);margin-bottom:.5rem;
 }
 .ul-folder{margin-bottom:.5rem}
-.ul-folder-lbl{
+.ul-group-hdr{cursor:pointer;user-select:none}
+.ul-group-hdr:active{opacity:.75}
+.ul-chevron{transition:transform .22s;flex-shrink:0}
+.ul-chevron.open{transform:rotate(180deg)}
+.ul-group-body{overflow:hidden}
+.ul-folder-hdr{
   display:flex;align-items:center;gap:.35rem;
+  cursor:pointer;user-select:none;
+  padding:.35rem .5rem;border-radius:8px;
+  transition:background .12s;
+}
+.ul-folder-hdr:active{background:var(--bdr)}
+.ul-folder-lbl{
+  display:flex;align-items:center;gap:.35rem;flex:1;
   font-size:.72rem;font-weight:700;color:var(--muted);
-  padding:.3rem 0 .15rem;text-transform:uppercase;letter-spacing:.06em;
+  text-transform:uppercase;letter-spacing:.06em;
 }
 .ul-folder-lbl svg{width:13px;height:13px}
-.ul-empty{font-size:.75rem;color:var(--muted);padding:.3rem .4rem;font-style:italic}
+.ul-folder-count{font-size:.68rem;color:var(--muted);background:var(--bdr);
+  padding:.05rem .45rem;border-radius:20px;font-weight:600}
+.ul-fchev{transition:transform .2s;flex-shrink:0}
+.ul-fchev.open{transform:rotate(180deg)}
+.ul-folder-body{overflow:hidden}
+.ul-empty{font-size:.75rem;color:var(--muted);padding:.3rem .5rem;font-style:italic}
 .ul-doc{
   display:flex;align-items:center;gap:.55rem;
   padding:.5rem .65rem;margin:.2rem 0;
@@ -706,47 +723,81 @@ async function downloadDoc(docId) {
   setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 1000);
 }
 
+// Accordion state (not persisted)
+const ulOpen = {}; // groupKey -> bool
+const ulFolderOpen = {}; // "groupKey/folderKey" -> bool
+
+function toggleUlGroup(groupKey) {
+  ulOpen[groupKey] = !ulOpen[groupKey];
+  renderU();
+}
+function toggleUlFolder(key) {
+  ulFolderOpen[key] = !ulFolderOpen[key];
+  renderU();
+}
+
 function renderU() {
   const panel = document.getElementById('tab-u');
+
+  const chevSvg = `<svg class="ul-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><polyline points="6 9 12 15 18 9"/></svg>`;
+  const fchevSvg = open => `<svg class="ul-fchev${open?' open':''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;stroke:var(--muted)"><polyline points="6 9 12 15 18 9"/></svg>`;
+
   const renderFolder = (groupKey, folder) => {
-    const key   = groupKey + '/' + folder.key;
-    const ids   = S.docs[key] || [];
-    const files = ids.map(id => (S.docs_files||{})[id]).filter(Boolean);
+    const key    = groupKey + '/' + folder.key;
+    const ids    = S.docs[key] || [];
+    const files  = ids.map(id => (S.docs_files||{})[id]).filter(Boolean);
+    const isOpen = !!ulFolderOpen[key]; // default closed
     return `
       <div class="ul-folder">
-        <div class="ul-folder-lbl">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-          ${folder.label}
+        <div class="ul-folder-hdr" onclick="toggleUlFolder('${key}')">
+          <div class="ul-folder-lbl">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            ${folder.label}
+          </div>
+          ${files.length > 0 ? `<span class="ul-folder-count">${files.length}</span>` : ''}
+          ${fchevSvg(isOpen)}
         </div>
-        ${files.length === 0 ? '<div class="ul-empty">Noch keine Dateien</div>' :
-          files.map(f => `
-            <div class="ul-doc">
-              <span class="ul-doc-ico">${docIcon(f.type)}</span>
-              <span class="ul-doc-name">${f.name}</span>
-              <div class="ul-doc-btns">
-                <button class="ul-btn" title="Vorschau" onclick="previewDoc('${f.id}')">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                </button>
-                <button class="ul-btn" title="Herunterladen" onclick="downloadDoc('${f.id}')">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                </button>
-              </div>
-            </div>`).join('')}
+        <div class="ul-folder-body" style="${isOpen ? '' : 'display:none'}">
+          ${files.length === 0 ? '<div class="ul-empty">Noch keine Dateien</div>' :
+            files.map(f => `
+              <div class="ul-doc">
+                <span class="ul-doc-ico">${docIcon(f.type)}</span>
+                <span class="ul-doc-name">${f.name}</span>
+                <div class="ul-doc-btns">
+                  <button class="ul-btn" title="Vorschau" onclick="previewDoc('${f.id}')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                  <button class="ul-btn" title="Herunterladen" onclick="downloadDoc('${f.id}')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  </button>
+                </div>
+              </div>`).join('')}
+        </div>
       </div>`;
   };
 
+  const totalDocs = g => DOC_FOLDERS.reduce((n, f) => n + ((S.docs[g.key+'/'+f.key]||[]).length), 0);
+
   panel.innerHTML = `
     <div class="pad">
-      <h2 style="font-family:'Fraunces',serif;font-size:1.25rem;font-weight:700;margin-bottom:1rem">📁 Unterlagen</h2>
-      ${DOC_GROUPS.map(g => `
-        <div class="ul-group">
-          <div class="ul-group-hdr">
-            <span style="font-size:1.1rem">${g.icon}</span>
-            <span>${g.label}</span>
+      <h2 style="font-family:'Fraunces',serif;font-size:1.25rem;font-weight:700;margin-bottom:.75rem">📁 Unterlagen</h2>
+      ${DOC_GROUPS.map(g => {
+        const isOpen = !!ulOpen[g.key];
+        const total  = totalDocs(g);
+        return `
+        <div class="ul-group" style="background:var(--surf);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;margin-bottom:.6rem">
+          <div class="ul-group-hdr" onclick="toggleUlGroup('${g.key}')" style="display:flex;align-items:center;gap:.55rem;padding:.75rem 1rem;">
+            <span style="font-size:1.15rem;line-height:1">${g.icon}</span>
+            <span style="flex:1;font-weight:700;font-size:.92rem">${g.label}</span>
+            ${total > 0 ? `<span style="font-size:.7rem;color:var(--muted);font-weight:600">${total} Datei${total!==1?'en':''}</span>` : ''}
+            <svg class="ul-chevron${isOpen?' open':''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;stroke:var(--muted)"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
-          ${DOC_FOLDERS.map(f => renderFolder(g.key, f)).join('')}
-        </div>`).join('')}
-      <p style="font-size:.72rem;color:var(--muted);margin-top:.5rem;border-top:1px solid var(--bdr);padding-top:.75rem">
+          <div class="ul-group-body" style="${isOpen ? 'border-top:1px solid var(--bdr);padding:.5rem .75rem .6rem' : 'display:none'}">
+            ${DOC_FOLDERS.map(f => renderFolder(g.key, f)).join('')}
+          </div>
+        </div>`;
+      }).join('')}
+      <p style="font-size:.72rem;color:var(--muted);margin-top:.25rem">
         💡 Dateien hier im Chat hochladen → Claude bettet sie ein.
       </p>
     </div>`;
